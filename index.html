@@ -1,0 +1,65 @@
+<html>
+<head>
+    <link href='http://fonts.googleapis.com/css?family=Sarina|Roboto+Condensed' rel='stylesheet' type='text/css'>
+    <link href="resources/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body>
+    <div id="title">
+        <h1><a href="http://github.com/manuelstofer/richardparker">Richard Parker</a></h1>
+        <h2>Simple template engine for two way bindings.</h2>
+    </div>
+
+
+<div id="try">
+
+    <div id="template">
+        <h3>Template</h3>
+        <textarea>
+<ul>
+    {each .tigers
+        <li>{.name}</li>
+    }
+</ul>
+        </textarea>
+    </div>
+
+    <div id="data">
+        <h3>Data</h3>
+        <textarea>
+{tigers: [
+    {name: 'Richard Parker'},
+    {name: 'Thristy'}
+]}
+        </textarea>
+    </div>
+
+
+    <div id="output">
+        <h3>Output</h3>
+        <textarea></textarea>
+    </div>
+
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script src="build/build.js"></script>
+<script>
+    var parker = require('richardparker');
+    function update () {
+        var template    = $('#template textarea').val(),
+            json        = $('#data textarea').val().replace(/\n/g, '');
+
+        eval('var parsed = ' + json + ';');
+        var output  = parker(template, parsed);
+        $('#output textarea').val(output);
+
+    }
+    $(function () {
+        $('#template textarea, #data textarea').bind('keyup', update);
+        update();
+    });
+</script>
+</body>
+</html>
