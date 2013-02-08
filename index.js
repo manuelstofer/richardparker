@@ -29,6 +29,12 @@ function compile (input, macros) {
         macrosNames = getMacroNames(macros);
 
     function transform (tree) {
+
+        if (tree.length) {
+            // A newline at the end of an expression and spaces after are removed
+            tree[tree.length - 1] = tree[tree.length - 1].replace(/\n *$/, '');
+        }
+
         for (var i = 0; i < macrosNames.length; i++) {
             var macroName = macrosNames[i],
                 macro = macros[macroName] || nativeMacros[macroName];

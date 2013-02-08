@@ -1,6 +1,6 @@
 {
     "name": "richardparker",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Simple template engine for two way bindings",
     "keywords": ["template", "engine", "two", "way", "binding"],
     "author": "Manuel Stofer <manuel@takimata.ch>",
