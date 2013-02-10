@@ -10,12 +10,13 @@ describe('.', function () {
 
     it('should display a attribute', function () {
         var tiger = {name: 'richard parker'};
-        render('they call me {.name}', tiger).should.equal('they call me richard parker');
+        render('they call me {. name}', tiger).should.equal('they call me richard parker');
     });
 
     it('should display an element of an array', function () {
         var site = {pages: ['about', 'news']};
-        render('{.pages[1]}', site).should.equal('news');
+        render('{. pages[1]}', site).should.equal('news');
+        render('{. pages.1}', site).should.equal('news');
     });
 });
 
@@ -23,7 +24,7 @@ describe('has', function () {
 
     it('should render when attribute is set', function () {
         var tiger = {name: 'richard parker'};
-        render('{has .name hello {.name}}', tiger).should.equal('hello richard parker');
+        render('{has .name hello {. name}}', tiger).should.equal('hello richard parker');
     });
 
     it('should not render when attribute is not set', function () {
@@ -70,10 +71,34 @@ describe('->', function () {
         render('{-> .person.name {path}}', site).should.equal('.person.name');
         render('{-> .person.name {path .}}', site).should.equal('.person.name');
         render('{-> .person.name {.}}', site).should.equal('Thirsty');
-        render('{-> .person {.name}}', site).should.equal('Thirsty');
+        render('{-> .person {. name}}', site).should.equal('Thirsty');
     });
 });
 
+describe('macros', function () {
+
+    it('can add custom macro', function () {
+        var macro = {
+            'custom-macro': function () {
+                return render.compile.helper.output('foo');
+            }
+        };
+        render('{custom-macro}', {}, macro).should.equal('foo');
+    });
+
+    it('two macros can begin with the same name', function () {
+        var macro = {
+            'custom-macro': function () {
+                return render.compile.helper.output('foo');
+            },
+            'custom-macro2': function () {
+                return render.compile.helper.output('foo2');
+            }
+        };
+        render('{custom-macro}', {}, macro).should.equal('foo');
+        render('{custom-macro2}', {}, macro).should.equal('foo2');
+    });
+});
 
 describe('the example in readme.md', function () {
 
@@ -82,7 +107,7 @@ describe('the example in readme.md', function () {
                 '{has .fields ' +
                 '  <form> ' +
                 '    {each .fields ' +
-                '      {.label}: <input type="text" x-bind="{path .name}" value="{.name}"> ' +
+                '      {. label}: <input type="text" x-bind="{path .name}" value="{. name}"> ' +
                 '    } ' +
                 '  </form>' +
                 '}',
@@ -103,3 +128,5 @@ describe('the example in readme.md', function () {
         render(template, data).replace(/\s/g, '').should.equal(output.replace(/\s/g, ''));
     });
 });
+
+
