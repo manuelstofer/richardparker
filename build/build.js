@@ -254,7 +254,8 @@ function compile (input, macros) {
 /**
  * Parse str in a tree structure
  * '{example {foo {bar}} {bla}}'
- * -> [
+ * ->
+ *    [
  *      'example ',
  *      ['foo ', ['bar']],
  *      ' ',
@@ -308,12 +309,12 @@ var nativeMacros = {
      */
     '.': function (tree) {
         var path = helper.parsePath(tree);
-        return '__out.push(resolve(path + "' + path + '"));';
+        return '__out.push(resolve(addToPath(path, "' + path + '")));';
     },
 
     /**
      * Moves down in path
-     * {-> .person.name {path}} -> .person.name
+     * {-> person.name {path}} -> person.name
      * @param tree
      * @param transform
      * @return {String}
@@ -321,15 +322,15 @@ var nativeMacros = {
     '->': function (tree, transform) {
         var path = helper.parsePath(tree);
         return helper.keepPath(
-            'path += "' + helper.escapeJS(path) + '";\n' +
-                helper.transformTree(tree, transform) + '\n'
+            'path = addToPath(path, "' + path + '");\n' +
+            helper.transformTree(tree, transform) + '\n'
         );
     },
 
     /**
      * Checks if a path exists
      * for example:
-     * {has .title <h1>{.title}</h1>}
+     * {has title <h1>{. title}</h1>}
      *
      * @param tree
      * @param transform
@@ -337,7 +338,7 @@ var nativeMacros = {
      */
     has: function (tree, transform) {
         var path = helper.parsePath(tree);
-        return  'if (typeof resolve(path + "' + path + '") !== "undefined") {\n' +
+        return  'if (typeof resolve(addToPath(path, "' + path + '")) !== "undefined") {\n' +
             helper.transformTree(tree, transform) + '\n' +
             '}';
     },
@@ -346,8 +347,8 @@ var nativeMacros = {
      * Iterates over an array or object
      * for example:
      * <ul>
-     *  {each .pages
-     *    <li>{.title}</li>
+     *  {each pages
+     *    <li>{. title}</li>
      *  }
      * </ul>
      *
@@ -358,23 +359,23 @@ var nativeMacros = {
     each: function (tree, transform) {
         var path = helper.parsePath(tree);
         return helper.keepPath(
-            'path += "' + path + '";\n' +
-                'each(resolve("' + path + '"), function (__itemPath) {' +
-                helper.keepPath('path += "." + __itemPath; ' + helper.transformTree(tree, transform)) + '\n' +
-                '});'
+            'path = addToPath(path, "' + path + '");\n' +
+            'each(resolve(path), function (__itemPath) {' +
+                helper.keepPath('path = addToPath(path, __itemPath);' + helper.transformTree(tree, transform)) + '\n' +
+            '});'
         );
     },
 
     /**
      * Outputs the current path
      * for example:
-     * {each .foo {path .bar}, } -> .foo[0].bar, .foo[1].bar ...
+     * {each foo {path bar} } -> foo.0.bar foo.1.bar
      * @param tree
      * @return {String}
      */
     path: function (tree) {
         var path = helper.parsePath(tree);
-        return '__out.push(path + "' + path + '");';
+        return '__out.push(addToPath(path, "' + path + '"));';
     },
 
     /**
@@ -391,6 +392,22 @@ var nativeMacros = {
  * @type {Object}
  */
 var helper = {
+
+    /**
+     * Read until the first white space in the first string of the AST
+     *
+     * @param [tree]
+     * @return {String}
+     */
+    parseArg: function (tree) {
+        var arg = String(/^\S+/.exec(String(tree[0])) || '');
+        tree[0] = tree[0].substr(arg.length).replace(/^\s+/, '');
+        return arg;
+    },
+
+    parsePath: function (tree) {
+        return helper.parseArg(tree) || '';
+    },
 
     /**
      * Escape a string not to interfere with javascript syntax
@@ -436,25 +453,6 @@ var helper = {
     },
 
     /**
-     * Read until the first white space in the first string of the AST
-     *
-     * @param [tree]
-     * @return {String}
-     */
-    parseArg: function (tree) {
-        var arg = String(/^\S+/.exec(String(tree[0])) || '');
-        tree[0] = tree[0].substr(arg.length).replace(/^\s+/, '');
-        return arg;
-    },
-
-    parsePath: function (tree) {
-        return (helper.parseArg(tree) || '')
-            .replace(/(\["?|"?])/g, '.')    // . notation for objects and arrays
-            .replace(/^(?=[^\.])/g, '.')    // always prefixed with .
-            .replace(/\.$/g, '');           // never ending with .
-    },
-
-    /**
      * Creates a closure for the path.
      *  ->  Useful when modifying the current path in a macro
      *      so it not required to be restored after.
@@ -475,6 +473,7 @@ var helper = {
     wrapTemplate: function (code) {
         return new Function('data',
             'var path = "", __out = [];\n data = data || {};\n' +
+                addToPath.toString() + '\n' +
                 resolve.toString() + '\n' +
                 each.toString() + '\n' +
                 code + '\n' +
@@ -493,9 +492,11 @@ compile.helper = helper;
  */
 function resolve (path) {
     var obj = data,
-        parts = path
-            .split(/\./)
-            .filter(function (part) { return part !== ''; });
+        parts = path.split(/\./);
+
+    if (path === '' || path === '.') {
+        return obj;
+    }
 
     while (parts.length > 0 && obj[parts[0]]) {
         obj = obj[parts[0]];
@@ -527,6 +528,18 @@ function each (obj, iterator) {
             }
         }
     }
+}
+
+function addToPath (path, part) {
+    path = String(path);
+    part = String(part);
+    if (path === '' && part === '') {
+        return '.';
+    }
+    if (part === '.' || part === '') {
+        return path;
+    }
+    return path ? path + '.' + part : part;
 }
 
 });
