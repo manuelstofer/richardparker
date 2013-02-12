@@ -24,10 +24,10 @@ Its kind of Mustache in s-expressions.
 Template:
 
 ```HTML
-{has .fields
+{has fields
   <form>
-    {each .fields
-      {. label}: <input type="text" x-bind="{path .name}" value="{. name}">
+    {each fields
+      {. label}: <input type="text" x-bind="{path name}" value="{. name}">
     }
   </form>
 }
@@ -48,8 +48,8 @@ Output:
 
 ```HTML
 <form>
-  Hunter: <input type="text" x-bind=".fields.0.name" value="Thirsty">
-  Tiger: <input type="text" x-bind=".fields.1.name" value="Richard Parker">
+  Hunter: <input type="text" x-bind="fields.0.name" value="Thirsty">
+  Tiger: <input type="text" x-bind="fields.1.name" value="Richard Parker">
 </form>
 ```
 
@@ -94,17 +94,17 @@ $ richardparker -a foo.html         # compile test.html and output as amd module
 var richard = require('richardparker'),
 
     // render directly
-    html = richard('{has .title <h1>{. title}</h1>}', {name: 'foo'});
+    html = richard('{has title <h1>{. title}</h1>}', {name: 'foo'});
 
     // compile to javascript function
-    template = richard.compile('{has .title <h1>{. title}</h1>}'),
+    template = richard.compile('{has title <h1>{. title}</h1>}'),
 
 ```
 
 ### Extensibility
 
 New commands can be added quite easily as compile time marcros. To see how its done
-checkout the native marcros has, ., each, and path.
+checkout the native marcros like has, each and path.
 
 
 

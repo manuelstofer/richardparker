@@ -15,7 +15,6 @@ describe('.', function () {
 
     it('should display an element of an array', function () {
         var site = {pages: ['about', 'news']};
-        render('{. pages[1]}', site).should.equal('news');
         render('{. pages.1}', site).should.equal('news');
     });
 });
@@ -24,17 +23,33 @@ describe('has', function () {
 
     it('should render when attribute is set', function () {
         var tiger = {name: 'richard parker'};
-        render('{has .name hello {. name}}', tiger).should.equal('hello richard parker');
+        render('{has name hello {. name}}', tiger).should.equal('hello richard parker');
     });
 
     it('should not render when attribute is not set', function () {
         var tiger = {};
-        render('{has .name hello richard}', tiger).should.equal('');
+        render('{has name hello richard}', tiger).should.equal('');
     });
 
     it('should not render when attribute is set but falsey', function () {
         var tiger = {name: false};
-        render('{has .name does render}', tiger).should.equal('');
+        render('{has name does render}', tiger).should.equal('');
+    });
+});
+
+describe('path', function () {
+    var site = {bar: [{foo: 3}]};
+
+    it('should output . for root', function () {
+        render('{path}', site).should.equal('.');
+    })
+
+    it('should output the correct path when called without each', function () {
+        render('{path bar}', site).should.equal('bar');
+    });
+
+    it('path should output the current path in the data structure', function () {
+        render('{each bar {path foo}}', site).should.equal('bar.0.foo');
     });
 });
 
@@ -42,12 +57,12 @@ describe('each', function () {
 
     it('should iterate over an array', function () {
         var site = {pages: ['about', 'news']};
-        render('{each .pages {.} }', site).should.equal('about news ');
+        render('{each pages {.} }', site).should.equal('about news ');
     });
 
     it('should iterate over an object', function () {
         var richard = {foo: {name: 'richard parker', age: 12}};
-        render('{each .foo {.} }', richard).should.equal('richard parker 12 ');
+        render('{each foo {.} }', richard).should.equal('richard parker 12 ');
     });
 
     it('should iterate over the root attributes of an object', function () {
@@ -56,22 +71,22 @@ describe('each', function () {
     });
 });
 
-describe('path', function () {
-
-    it('path should output the current path in the data structure', function () {
-        var site = {bar: [{foo: 3}]};
-        render('{each .bar {path .foo}}', site).should.equal('.bar.0.foo');
-    });
-});
-
 describe('->', function () {
 
-    it('-> should move down in path', function () {
+    describe('-> should move down in path', function () {
         var site = {person: {name: 'Thirsty'}};
-        render('{-> .person.name {path}}', site).should.equal('.person.name');
-        render('{-> .person.name {path .}}', site).should.equal('.person.name');
-        render('{-> .person.name {.}}', site).should.equal('Thirsty');
-        render('{-> .person {. name}}', site).should.equal('Thirsty');
+
+        it('should resolve to the correct path', function () {
+            render('{-> person.name {path}}', site).should.equal('person.name');
+        });
+
+        it('should resolve the correct value', function () {
+            render('{-> person {. name}}', site).should.equal('Thirsty');
+        });
+
+        it('should resolve the correct values for {.}', function () {
+            render('{-> person.name {.}}', site).should.equal('Thirsty');
+        });
     });
 });
 
@@ -104,10 +119,10 @@ describe('the example in readme.md', function () {
 
     it('should be correct except for whitespace', function () {
         var template =
-                '{has .fields ' +
+                '{has fields ' +
                 '  <form> ' +
-                '    {each .fields ' +
-                '      {. label}: <input type="text" x-bind="{path .name}" value="{. name}"> ' +
+                '    {each fields ' +
+                '      {. label}: <input type="text" x-bind="{path name}" value="{. name}"> ' +
                 '    } ' +
                 '  </form>' +
                 '}',
@@ -121,8 +136,8 @@ describe('the example in readme.md', function () {
 
             output =
                 '<form> ' +
-                '  Hunter: <input type="text" x-bind=".fields.0.name" value="Thirsty"> ' +
-                '  Tiger: <input type="text" x-bind=".fields.1.name" value="Richard Parker"> ' +
+                '  Hunter: <input type="text" x-bind="fields.0.name" value="Thirsty"> ' +
+                '  Tiger: <input type="text" x-bind="fields.1.name" value="Richard Parker"> ' +
                 '</form>';
 
         render(template, data).replace(/\s/g, '').should.equal(output.replace(/\s/g, ''));
