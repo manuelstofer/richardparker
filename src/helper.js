@@ -101,7 +101,7 @@ module.exports = helper = {
         }
 
         return new Function('data', 'options',
-            'options = options || {}; ' +
+            'options = options || {}; ' +
             'var path = options.path || "",\n__out = [];\n data = data || {};\n' +
             runtimeCode +
             code + '\n' +
