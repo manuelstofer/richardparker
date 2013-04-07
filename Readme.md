@@ -12,6 +12,8 @@ Simple template engine for two way bindings.
 > Thirsty and the tiger was called Richard Parker. We laughed about it and the name stuck.
 
 
+Richard Parker is a simple template engine designed for data binding with json pointers.
+
 ## Demo
 
 [Render some tigers with Richard Parker](http://manuelstofer.github.com/richardparker/)
@@ -27,7 +29,7 @@ Template:
 {has fields
   <form>
     {each fields
-      {. label}: <input type="text" x-bind="{path name}" value="{. name}">
+      {. label}: <input type="text" x-bind="{pointer name}" value="{. name}">
     }
   </form>
 }
@@ -48,15 +50,13 @@ Output:
 
 ```HTML
 <form>
-  Hunter: <input type="text" x-bind="fields.0.name" value="Thirsty">
-  Tiger: <input type="text" x-bind="fields.1.name" value="Richard Parker">
+  Hunter: <input type="text" x-bind="/fields/0/name" value="Thirsty">
+  Tiger: <input type="text" x-bind="/fields/1/name" value="Richard Parker">
 </form>
 ```
 
-In the example above the x-bind attribute is set to the path of the names in
-the data object. This is intended to be used for two way data bindings.
-The value of the input field can easily be pushed back into the data object
-when it changes.
+In the example above {pointer} is used to generate a json pointer to the names.
+This is useful to create data bindings.
 
 
 ## Installation
@@ -70,7 +70,7 @@ $ npm install richardparker
 Using Component
 
 ```
-$ component install richardparker
+$ component install manuelstofer/richardparker
 ```
 
 ## Usage
@@ -104,7 +104,7 @@ var richard = require('richardparker'),
 ### Extensibility
 
 New commands can be added quite easily as compile time marcros. To see how its done
-checkout the native marcros like has, each and path.
+checkout the native macros like has, each and pointer.
 
 
 
